@@ -166,7 +166,6 @@ public class Orogeny {
      * @throws SQLException si ocurre algún error en la base de datos.
      */
     public static void createTable(Connection conex) throws SQLException{
-        Statement stmt = conex.createStatement();
             String createTableSQL = "CREATE TABLE IF NOT EXISTS Mountains ("
             + "id INT AUTO_INCREMENT PRIMARY KEY, "
             + "name VARCHAR(50), "
@@ -175,7 +174,11 @@ public class Orogeny {
             + "region VARCHAR(50), "
             + "country VARCHAR(50))";
 
-            stmt.execute(createTableSQL);
+            try(PreparedStatement pstmt = conex.prepareStatement(createTableSQL)){
+                pstmt.executeUpdate();
+            }catch(SQLException createsql){
+                System.err.println("Error al tratar de crear en la BBDD" + createsql.getMessage());
+            }        
     }    
 
     /**
@@ -241,9 +244,10 @@ public class Orogeny {
     public static void selectRow (Connection conex, int id){
         String selectSQL = "SELECT * FROM Mountains WHERE id = ?";
         try(PreparedStatement pstmt = conex.prepareStatement(selectSQL); 
+        ResultSet rs = pstmt.executeQuery();
         ){
             pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
+            
             System.out.println("Datos del ID : " + id );
             if(rs.next()){
                 System.out.println("ID: "+ rs.getInt("id") + "\n"
@@ -324,9 +328,9 @@ public class Orogeny {
      */
     public static void dropTable (Connection conex){
         String dropSQL = "DROP TABLE IF EXISTS Mountains";
-        try (Statement stmt = conex.createStatement()){
+        try (PreparedStatement pstmt = conex.prepareStatement(dropSQL)){
             
-            stmt.execute(dropSQL);
+            pstmt.executeUpdate();
             System.out.println("Tabla 'Mountains' borrada correctamente");
         } catch (SQLException drpsql) {
             System.err.println("Error al intentar eliminar en la BBDD " + drpsql.getMessage());
